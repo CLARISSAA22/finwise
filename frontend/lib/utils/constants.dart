@@ -42,6 +42,7 @@ class AppColors {
 
 class ApiConstants {
   static const List<String> knownBaseUrls = [
+    'https://fimwise.onrender.com',
     'http://192.168.1.5:5000',
     'http://192.168.137.104:5000',
     'http://10.210.67.128:5000',

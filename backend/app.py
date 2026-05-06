@@ -25,9 +25,13 @@ except ImportError:
     RAZORPAY_AVAILABLE = False
 
 app = Flask(__name__)
-# Configurations
 app.config['SECRET_KEY'] = 'finwise_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///finwise.db'
+# Database Configuration
+db_url = os.environ.get('DATABASE_URL', 'sqlite:///finwise.db')
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 CORS(app)
