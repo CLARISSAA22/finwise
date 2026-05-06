@@ -144,6 +144,26 @@ def login():
         print(f"Login Error: {e}")
         return jsonify({'message': 'Server error during login', 'error': str(e)}), 500
 
+@app.route('/reset-password', methods=['POST'])
+def reset_password():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        new_password = data.get('new_password')
+        
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return jsonify({'message': 'User with this email not found!'}), 404
+            
+        hashed_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+        user.password_hash = hashed_password
+        db.session.commit()
+        
+        return jsonify({'message': 'Password reset successfully!'}), 200
+    except Exception as e:
+        print(f"Reset Password Error: {e}")
+        return jsonify({'message': 'Server error', 'error': str(e)}), 500
+
 @app.route('/google-login', methods=['POST'])
 def google_login():
     # Simulate finding or creating a user via Google OAuth

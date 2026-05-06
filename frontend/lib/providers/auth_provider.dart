@@ -91,6 +91,33 @@ class AuthProvider with ChangeNotifier
       return 'Could not connect to server. Check your IP and Firewall.';
     }
   }
+
+  // reset password function
+  Future<String?> resetPassword(String email, String newPassword) async 
+  {
+    try 
+    {
+      debugPrint('Attempting Password Reset at $baseUrl/reset-password...');
+      final res = await http.post(
+        Uri.parse('$baseUrl/reset-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'new_password': newPassword}),
+      ).timeout(const Duration(seconds: 10));
+      
+      if (res.statusCode == 200) 
+      {
+        return null; // Success
+      }
+      final data = jsonDecode(res.body);
+      return data['message'] ?? 'Password reset failed';
+    } 
+    catch (e) 
+    {
+      debugPrint('Reset Password Error: $e');
+      return 'Could not connect to server.';
+    }
+  }
+
   //fetch profile function
   Future<void> fetchProfile() async
   {
