@@ -37,7 +37,7 @@ class AuthProvider with ChangeNotifier
         Uri.parse('$baseUrl/login'), //url to post the login credentials
         headers: {'Content-Type': 'application/json'},//content type of the request
         body: jsonEncode({'email': email, 'password': password}),//body of the request
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 60));
       
       debugPrint('Login Status: ${res.statusCode}'); //status code of the request
       if (res.statusCode == 200) //if the status code is 200
@@ -75,7 +75,7 @@ class AuthProvider with ChangeNotifier
         Uri.parse('$baseUrl/register'),//url to post the registration credentials
         headers: {'Content-Type': 'application/json'},//content type of the request
         body: jsonEncode({'name': name, 'email': email, 'password': password}),//body of the request
-      ).timeout(const Duration(seconds: 10));//timeout for the request
+      ).timeout(const Duration(seconds: 60));//timeout for the request
       debugPrint('Registration Status: ${res.statusCode}');//status code of the request
       debugPrint('Registration Body: ${res.body}');
       if (res.statusCode == 201) 
@@ -102,7 +102,7 @@ class AuthProvider with ChangeNotifier
         Uri.parse('$baseUrl/reset-password'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'new_password': newPassword}),
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 60));
       
       if (res.statusCode == 200) 
       {
@@ -129,7 +129,7 @@ class AuthProvider with ChangeNotifier
       final res = await http.get(
         Uri.parse('$baseUrl/profile'),
         headers: {'Authorization': 'Bearer $_token'},
-      ).timeout(const Duration(seconds: 10));
+      ).timeout(const Duration(seconds: 60));
 
       if (res.statusCode == 200) 
       {

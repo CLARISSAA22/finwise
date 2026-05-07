@@ -26,7 +26,7 @@ class ApiService {
         'Content-Type': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token',
       },
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
   }
 
   Future<http.Response> postRequest(String endpoint, Map<String, dynamic> data) async {
@@ -38,7 +38,7 @@ class ApiService {
         if (token != null) 'Authorization': 'Bearer $token',
       },
       body: jsonEncode(data),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
   }
 
   Future<http.Response> putRequest(String endpoint, Map<String, dynamic> data) async {
@@ -50,7 +50,7 @@ class ApiService {
         if (token != null) 'Authorization': 'Bearer $token',
       },
       body: jsonEncode(data),
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
   }
 
   Future<http.Response> deleteRequest(String endpoint) async {
@@ -61,6 +61,6 @@ class ApiService {
         'Content-Type': 'application/json',
         if (token != null) 'Authorization': 'Bearer $token',
       },
-    ).timeout(const Duration(seconds: 10));
+    ).timeout(const Duration(seconds: 60));
   }
 }

@@ -167,6 +167,87 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
     );
   }
 
+  // ──────────────────────────── edit dialog ───────────────────────────
+
+  void _showEditDialog(Subscription sub) {
+    final nameCtrl = TextEditingController(text: sub.name);
+    final amountCtrl = TextEditingController(text: sub.amount.toString());
+    String cycle = sub.billingCycle.isNotEmpty ? sub.billingCycle : 'monthly';
+    DateTime dueDate = DateTime.now();
+    try {
+      dueDate = DateFormat('yyyy-MM-dd').parse(sub.nextDueDate);
+    } catch (_) {}
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Edit Subscription'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                    controller: nameCtrl,
+                    decoration: const InputDecoration(labelText: 'Name')),
+                TextField(
+                    controller: amountCtrl,
+                    decoration: const InputDecoration(labelText: 'Amount'),
+                    keyboardType: TextInputType.number),
+                DropdownButton<String>(
+                  value: cycle,
+                  onChanged: (v) => setState(() => cycle = v!),
+                  items: ['monthly', 'yearly']
+                      .map((c) =>
+                          DropdownMenuItem(value: c, child: Text(c)))
+                      .toList(),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Text('Due: '),
+                    TextButton(
+                      onPressed: () async {
+                        final d = await showDatePicker(
+                            context: context,
+                            initialDate: dueDate,
+                            firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                            lastDate: DateTime(2100));
+                        if (d != null) setState(() => dueDate = d);
+                      },
+                      child: Text(DateFormat('dd MMM yyyy').format(dueDate)),
+                    ),
+                  ],
+                )
+              ],
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel')),
+              ElevatedButton(
+                onPressed: () async {
+                  if (nameCtrl.text.isEmpty || amountCtrl.text.isEmpty) return;
+                  final fp =
+                      Provider.of<FinanceProvider>(context, listen: false);
+                  await fp.editSubscription(sub.id, {
+                    'name': nameCtrl.text,
+                    'amount': double.parse(amountCtrl.text),
+                    'billing_cycle': cycle,
+                    'next_due_date':
+                        DateFormat('yyyy-MM-dd').format(dueDate),
+                  });
+                  if (mounted) Navigator.pop(context);
+                },
+                child: const Text('Save'),
+              ),
+            ],
+          );
+        });
+      },
+    );
+  }
+
   // ──────────────────────────── pay dialog ───────────────────────────
 
   Future<void> _showPayDialog(Subscription sub) async {
@@ -434,14 +515,28 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                                     fontWeight: FontWeight.bold),
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.cancel,
-                                  color: Colors.red, size: 20),
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              onPressed: () => financeProvider
-                                  .deleteSubscription(sub.id),
-                              tooltip: 'Cancel subscription',
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit,
+                                      color: Colors.blue, size: 20),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => _showEditDialog(sub),
+                                  tooltip: 'Edit subscription',
+                                ),
+                                const SizedBox(width: 12),
+                                IconButton(
+                                  icon: const Icon(Icons.cancel,
+                                      color: Colors.red, size: 20),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(),
+                                  onPressed: () => financeProvider
+                                      .deleteSubscription(sub.id),
+                                  tooltip: 'Cancel subscription',
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -475,29 +570,27 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
                             ),
                           ],
                         ),
-                        // ── Pay button (only when due/overdue) ──
-                        if (isDueOrOverdue) ...[
-                          const SizedBox(height: 10),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: isOverdue
-                                    ? Colors.red[700]
-                                    : AppColors.primary,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(8)),
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10),
-                              ),
-                              icon: const Icon(Icons.payment),
-                              label: const Text('Pay via UPI / Card'),
-                              onPressed: () => _showPayDialog(sub),
+                        // ── Pay button (always visible) ──
+                        const SizedBox(height: 10),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isOverdue
+                                  ? Colors.red[700]
+                                  : AppColors.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(8)),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 10),
                             ),
+                            icon: const Icon(Icons.payment),
+                            label: Text(isDueOrOverdue ? 'Pay via UPI / Card' : 'Pay Early via UPI / Card'),
+                            onPressed: () => _showPayDialog(sub),
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   ),

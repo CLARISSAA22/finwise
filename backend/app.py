@@ -449,7 +449,7 @@ def pay_subscription(current_user, sub_id):
         user_id=current_user.id,
         amount=sub.amount,
         type='expense',
-        category='Subscription',
+        category='Bills',
         date=today_str,
         description=f'{sub.name} subscription payment',
         mood='Neutral',
@@ -489,6 +489,23 @@ def pay_subscription(current_user, sub_id):
         'next_due_date': sub.next_due_date,
         'amount': sub.amount
     }), 201
+
+@app.route('/subscriptions/<int:sub_id>', methods=['PUT'])
+@token_required
+def modify_subscription(current_user, sub_id):
+    sub = Subscription.query.filter_by(id=sub_id, user_id=current_user.id).first()
+    if not sub:
+        return jsonify({'message': 'Not found'}), 404
+        
+    data = request.get_json()
+    sub.name = data.get('name', sub.name)
+    if 'amount' in data:
+        sub.amount = float(data['amount'])
+    sub.billing_cycle = data.get('billing_cycle', sub.billing_cycle)
+    sub.next_due_date = data.get('next_due_date', sub.next_due_date)
+    
+    db.session.commit()
+    return jsonify({'message': 'Subscription updated!'}), 200
 
 @app.route('/insights', methods=['GET'])
 @token_required

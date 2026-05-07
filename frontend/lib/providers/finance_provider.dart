@@ -128,6 +128,17 @@ class FinanceProvider with ChangeNotifier
     }
     return false;
   }
+
+  Future<bool> editSubscription(int id, Map<String, dynamic> data) async 
+  {
+    final response = await _apiService.putRequest('/subscriptions/$id', data);
+    if (response.statusCode == 200) 
+    {
+      await fetchSubscriptions();
+      return true;
+    }
+    return false;
+  }
   /// Pay a subscription — records as expense transaction, advances next_due_date.
   Future<Map<String, dynamic>?> paySubscription(int id, String paymentMethod) async 
   {
