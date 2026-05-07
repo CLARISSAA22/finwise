@@ -177,6 +177,7 @@ class FinanceProvider with ChangeNotifier
     if (response.statusCode == 201) 
     {
       await fetchGoals();
+      await fetchTransactions();
       return true;
     }
     return false;
@@ -195,6 +196,7 @@ class FinanceProvider with ChangeNotifier
     if (response.statusCode == 200) 
     {
       await fetchGoals();
+      await fetchTransactions();
       return true;
     }
     return false;

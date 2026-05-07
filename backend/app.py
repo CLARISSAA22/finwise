@@ -631,6 +631,17 @@ def manage_goals(current_user):
         # Deduct from total balance if starting with some money
         if current_amt > 0:
             current_user.total_balance -= current_amt
+            new_tx = Transaction(
+                user_id=current_user.id,
+                amount=current_amt,
+                type='expense',
+                category='Savings',
+                date=datetime.utcnow().strftime('%Y-%m-%d %H:%M'),
+                description=f"Saved to goal: {new_goal.description}",
+                mood='Optimistic',
+                payment_method='Internal'
+            )
+            db.session.add(new_tx)
             
         db.session.add(new_goal)
         db.session.commit()
@@ -654,7 +665,23 @@ def modify_goal(current_user, goal_id):
         
         # If current_amount increased, deduct from balance. If decreased, add back.
         diff = new_current - goal.current_amount
-        current_user.total_balance -= diff
+        if diff != 0:
+            current_user.total_balance -= diff
+            
+            tx_type = 'expense' if diff > 0 else 'income'
+            tx_desc = f"Saved to goal: {goal.description}" if diff > 0 else f"Withdrawn from goal: {goal.description}"
+            
+            new_tx = Transaction(
+                user_id=current_user.id,
+                amount=abs(diff),
+                type=tx_type,
+                category='Savings',
+                date=datetime.utcnow().strftime('%Y-%m-%d %H:%M'),
+                description=tx_desc,
+                mood='Optimistic' if diff > 0 else 'Excited',
+                payment_method='Internal'
+            )
+            db.session.add(new_tx)
         
         goal.target_amount = float(data.get('target_amount', goal.target_amount))
         goal.current_amount = new_current
