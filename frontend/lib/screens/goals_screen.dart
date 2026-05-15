@@ -256,11 +256,23 @@ class _GoalsScreenState extends State<GoalsScreen>
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text('Deadline: ${_formatDate(g.deadline)}', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
-                                TextButton.icon(
-                                  onPressed: () => _showAddMoneyDialog(context, finance, g),
-                                  icon: const Icon(Icons.add_circle_outline, size: 16, color: Colors.green),
-                                  label: const Text('Add Money', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13)),
-                                  style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 0)),
+                                Row(
+                                  children: [
+                                    if (g.currentAmount > 0 && !isCompleted)
+                                      TextButton.icon(
+                                        onPressed: () => _showWithdrawMoneyDialog(context, finance, g),
+                                        icon: const Icon(Icons.money_off, size: 16, color: Colors.orange),
+                                        label: const Text('Withdraw', style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 13)),
+                                        style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 0)),
+                                      ),
+                                    if (g.currentAmount > 0 && !isCompleted) const SizedBox(width: 8),
+                                    TextButton.icon(
+                                      onPressed: () => _showAddMoneyDialog(context, finance, g),
+                                      icon: const Icon(Icons.add_circle_outline, size: 16, color: Colors.green),
+                                      label: const Text('Add Money', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 13)),
+                                      style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: const Size(0, 0)),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
@@ -358,6 +370,58 @@ class _GoalsScreenState extends State<GoalsScreen>
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
             child: const Text('Pay Using UPI'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showWithdrawMoneyDialog(BuildContext context, FinanceProvider finance, Goal goal) {
+    final amountCtl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Withdraw from ${goal.description}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Available to withdraw: ₹${goal.currentAmount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            TextField(
+              controller: amountCtl,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              decoration: const InputDecoration(labelText: 'Amount (₹)', prefixText: '₹ '),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              final val = double.tryParse(amountCtl.text) ?? 0;
+              if (val > 0 && val <= goal.currentAmount) {
+                await finance.editGoal(
+                  goal.id, 
+                  goal.targetAmount, 
+                  goal.currentAmount - val, 
+                  goal.deadline, 
+                  goal.description,
+                  goal.autoSavePercentage
+                );
+                final auth = Provider.of<AuthProvider>(context, listen: false);
+                auth.fetchProfile(); // Sync balance
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Withdrew ₹$val from ${goal.description}!'), backgroundColor: Colors.green));
+              } else if (val > goal.currentAmount) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cannot withdraw more than saved amount.'), backgroundColor: Colors.red));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid amount.'), backgroundColor: Colors.red));
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, foregroundColor: Colors.white),
+            child: const Text('Withdraw'),
           ),
         ],
       ),
