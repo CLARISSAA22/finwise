@@ -1,7 +1,5 @@
 databases:
   - name: finwise-db
-    databaseName: finwise
-    user: finwise_user
     plan: free
 
 
