@@ -17,17 +17,14 @@ class AppColors {
   // Dark Slate (Future dark mode)- Login, settings (where we want contrast)
   static const Color cardColor = Color(0xFFFFFFFF);   
    // White- Cards, dialogs, active surfaces
-  
   // Typography
   static const Color textDark = Color(0xFF212121);    
    // Dark Gray (Primary text)- Headings, amounts, strong text
   static const Color textLight = Color(0xFF757575);    
   // Medium Gray (Secondary text)- Subtitles, descriptions, disabled text
-  
   // UI Elements
   static const Color divider = Color(0xFFE0E0E0);     
    // Light Gray- Dividers, borders
-  
   // Maintained for backward compatibility in specific layouts
   static const Color primaryLight = Color(0xFFBBDEFB); 
   // Extra Light Blue - Pastels for charts and graphs
@@ -42,7 +39,7 @@ class AppColors {
 
 class ApiConstants {
   static const List<String> knownBaseUrls = [
-    'https://finwise-1ihp.onrender.com',
+    'https://finwise-backend-p5nb.onrender.com',
     'http://192.168.1.5:5000',
     'http://192.168.137.104:5000',
     'http://10.210.67.128:5000',
