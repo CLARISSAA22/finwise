@@ -1,4 +1,7 @@
 @echo off
+echo Setting correct GitHub account...
+git remote set-url origin https://github.com/CLARISSAA22/finwise.git
+
 echo Adding files to git...
 git add .
 echo.
