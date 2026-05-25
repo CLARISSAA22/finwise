@@ -167,7 +167,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
     }
   }
 // save transation function with razorpay integration
-  void _saveTransaction({bool payViaUpi = false}) async 
+  void _saveTransaction({bool payNow = false}) async 
   {
     if (_isSaving) 
     return;
@@ -187,7 +187,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
     final financeProvider = Provider.of<FinanceProvider>(context, listen: false);
 
     // If it's a digital payment (Card or UPI) and the user chose to "Pay"
-    if (_type == 'expense' && (_paymentMethod == 'Card' || (_paymentMethod == 'UPI' && payViaUpi))) {
+    if (_type == 'expense' && payNow && (_paymentMethod == 'Card' || _paymentMethod == 'UPI')) {
       setState(() => _isSaving = true);
       
       if (_paymentMethod == 'UPI') {
@@ -629,7 +629,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
               ),
               const SizedBox(height: 32),
               // Unified Action Button
-              if (_type == 'expense' && _paymentMethod == 'UPI' && widget.initialUpiId == null)
+              if (_type == 'expense' && (_paymentMethod == 'UPI' || _paymentMethod == 'Card') && widget.initialUpiId == null)
                 Row(
                   children: [
                     Expanded(
@@ -640,8 +640,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
                           minimumSize: const Size(0, 56),
                         ),
-                        onPressed: _isSaving ? null : () => _saveTransaction(payViaUpi: true),
-                        child: _isSaving ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('Save & Pay', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        onPressed: _isSaving ? null : () => _saveTransaction(payNow: true),
+                        child: _isSaving 
+                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) 
+                          : Text(_paymentMethod == 'UPI' ? 'Save & Pay' : 'Pay Now', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -653,8 +655,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
                           minimumSize: const Size(0, 56),
                         ),
-                        onPressed: _isSaving ? null : () => _saveTransaction(payViaUpi: false),
-                        child: _isSaving ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('Save Transaction', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        onPressed: _isSaving ? null : () => _saveTransaction(payNow: false),
+                        child: _isSaving 
+                          ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) 
+                          : const Text('Save Transaction', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                       ),
                     ),
                   ],
@@ -687,7 +691,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> with Single
                       minimumSize: const Size(0, 56),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    onPressed: _isSaving ? null : () => _saveTransaction(payViaUpi: true),
+                    onPressed: _isSaving ? null : () => _saveTransaction(payNow: true),
                     child: _isSaving
                       ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : Text(
