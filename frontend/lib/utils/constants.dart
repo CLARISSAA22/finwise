@@ -39,6 +39,7 @@ class AppColors {
 
 class ApiConstants {
   static const List<String> knownBaseUrls = [
+    'http://192.168.1.8:5000',
     'https://finwise-backend-dtkb.onrender.com',
     'http://192.168.1.5:5000',
     'http://192.168.137.104:5000',

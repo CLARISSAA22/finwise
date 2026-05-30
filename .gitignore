@@ -1,0 +1,20 @@
+# Mobile builds and executables
+*.apk
+*.ap_
+*.aab
+app-debug.apk
+
+# Database files
+backend/instance/finwise.db
+backend/instance/
+
+# IDE and system files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
