@@ -18,11 +18,3 @@ services:
       - key: PYTHON_VERSION
         value: 3.10.0
 
-  - type: web
-    name: finwise-frontend
-    env: static
-    buildCommand: "./build_frontend.sh"
-    staticPublishPath: "./frontend/build/web"
-    envVars:
-      - key: FLUTTER_WEB_USE_SKIA
-        value: "true"
