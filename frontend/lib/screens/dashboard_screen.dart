@@ -9,8 +9,7 @@ import 'wealth_tab.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
-import 'goals_screen.dart';
-import 'subscriptions_screen.dart';
+import '../providers/finance_provider.dart';
 import 'login_screen.dart';
 
 class DashboardScreen extends StatefulWidget 
@@ -22,6 +21,7 @@ class DashboardScreen extends StatefulWidget
 class _DashboardScreenState extends State<DashboardScreen> 
 {
   int _currentIndex = 0;
+  bool _isLoading = true;
   final List<Widget> _pages = [
     const HomeTab(),
     const BudgetsScreen(),
@@ -30,10 +30,53 @@ class _DashboardScreenState extends State<DashboardScreen>
     const ProfileScreen(),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboardData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    try {
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final financeProvider = Provider.of<FinanceProvider>(context, listen: false);
+      
+      final now = DateTime.now();
+      final monthYear = "${now.year}-${now.month.toString().padLeft(2, '0')}";
+      
+      await Future.wait([
+        authProvider.fetchProfile(),
+        financeProvider.fetchTransactions(monthYear: monthYear),
+        financeProvider.fetchBudgets(),
+        financeProvider.fetchGoals(),
+        financeProvider.fetchSubscriptions(),
+        financeProvider.fetchInsights(),
+      ]);
+    } catch (e) {
+      debugPrint('Error loading dashboard data: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
 //loading page 
   @override
   Widget build(BuildContext context) 
   {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            color: AppColors.primary,
+          ),
+        ),
+      );
+    }
+
     final authProvider = Provider.of<AuthProvider>(context);
     final user = authProvider.currentUser;
     final userName = user?.name ?? 'FinWise User';

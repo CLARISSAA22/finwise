@@ -14,6 +14,7 @@ class BudgetsScreen extends StatefulWidget
 class _BudgetsScreenState extends State<BudgetsScreen> 
 {
   final _amountCtrl = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
   String _selectedCategory = 'Food';
   final List<String> _categories = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Bills', 'Misc'];
 //budget screen code setup
@@ -96,79 +97,72 @@ class _BudgetsScreenState extends State<BudgetsScreen>
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text(
-                        'New Monthly Budget',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'New Monthly Budget',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _selectedCategory,
-                        decoration: const InputDecoration(labelText: 'Category'),
-                        items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                        onChanged: (v) => setStateModal(() => _selectedCategory = v!),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _amountCtrl,
-                        decoration: const InputDecoration(labelText: 'Limit Amount (₹)'),
-                        keyboardType: TextInputType.number,
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              _amountCtrl.clear();
-                              Navigator.pop(context);
-                            },
-                            child: const Text('Cancel'),
-                          ),
-                          const SizedBox(width: 12),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primary,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        const SizedBox(height: 16),
+                        DropdownButtonFormField<String>(
+                          value: _selectedCategory,
+                          decoration: const InputDecoration(labelText: 'Category'),
+                          items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                          onChanged: (v) => setStateModal(() => _selectedCategory = v!),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _amountCtrl,
+                          decoration: const InputDecoration(labelText: 'Limit Amount (₹)'),
+                          keyboardType: TextInputType.number,
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return 'Please enter a limit amount';
+                            }
+                            final amount = double.tryParse(value.trim());
+                            if (amount == null || amount <= 0) {
+                              return 'Please enter a valid positive amount';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                _amountCtrl.clear();
+                                Navigator.pop(context);
+                              },
+                              child: const Text('Cancel'),
                             ),
-                            onPressed: () {
-                              final text = _amountCtrl.text.trim();
-                              if (text.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please enter a limit amount'),
-                                    backgroundColor: Colors.red,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                                return;
-                              }
-                              final amount = double.tryParse(text);
-                              if (amount == null || amount <= 0) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please enter a valid positive amount'),
-                                    backgroundColor: Colors.red,
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                                return;
-                              }
-                              _addBudget();
-                            },
-                            child: const Text('Set Budget', style: TextStyle(color: Colors.white)),
-                          ),
-                        ],
-                      ),
-                    ],
+                            const SizedBox(width: 12),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onPressed: () {
+                                if (_formKey.currentState!.validate()) {
+                                  _addBudget();
+                                }
+                              },
+                              child: const Text('Set Budget', style: TextStyle(color: Colors.white)),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

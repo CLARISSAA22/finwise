@@ -23,7 +23,8 @@ class FinanceProvider with ChangeNotifier
   {
     try 
     {
-      final response = await _apiService.getRequest(monthYear != null ? '/transactions?month_year=$monthYear' : '/transactions');
+      final targetMonth = monthYear ?? "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}";
+      final response = await _apiService.getRequest('/transactions?month_year=$targetMonth');
       if (response.statusCode == 200) 
       {
         final data = jsonDecode(response.body);

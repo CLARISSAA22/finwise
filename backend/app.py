@@ -273,7 +273,9 @@ def get_transactions(current_user):
     
     if start_date and end_date:
         query = query.filter(Transaction.date >= start_date, Transaction.date <= end_date)
-    elif month_year:
+    else:
+        if not month_year:
+            month_year = datetime.utcnow().strftime('%Y-%m')
         import calendar
         try:
             yr, mo = map(int, month_year.split('-'))

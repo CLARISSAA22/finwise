@@ -81,7 +81,7 @@ def test_flow():
     })
     print(f"Add Expense (2500) Status: {res.status_code} | Response: {res.json}")
 
-    res = client.get('/transactions', headers=headers)
+    res = client.get('/transactions?month_year=2026-04', headers=headers)
     txs = res.json.get('transactions', [])
     print(f"Fetched Transactions Status: {res.status_code} | Count: {len(txs)}")
     

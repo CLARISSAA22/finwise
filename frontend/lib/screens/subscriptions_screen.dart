@@ -463,25 +463,33 @@ class _SubscriptionsScreenState extends State<SubscriptionsScreen> {
               itemBuilder: (context, index) {
                 final sub = financeProvider.subscriptions[index];
 
-                // Due today (0) or overdue (<0) → show Pay button
-                final isDueOrOverdue = sub.dueInDays <= 0;
-                final isOverdue = sub.dueInDays < 0;
+                 // Due today (0) or overdue (<0) → show Pay button
+                 int daysDiff = sub.dueInDays;
+                 try {
+                   final dueDate = DateTime.parse(sub.nextDueDate);
+                   final now = DateTime.now();
+                   final today = DateTime(now.year, now.month, now.day);
+                   daysDiff = dueDate.difference(today).inDays;
+                 } catch (_) {}
 
-                String dueLabel;
-                Color dueColor;
-                if (isOverdue) {
-                  dueLabel = 'Overdue by ${sub.dueInDays.abs()} day(s)';
-                  dueColor = Colors.red;
-                } else if (sub.dueInDays == 0) {
-                  dueLabel = 'Due TODAY';
-                  dueColor = Colors.orange[800]!;
-                } else if (sub.isDueSoon) {
-                  dueLabel = 'Due in ${sub.dueInDays} day(s)';
-                  dueColor = Colors.orange;
-                } else {
-                  dueLabel = 'Due ${_formatDate(sub.nextDueDate)}';
-                  dueColor = Colors.grey[600]!;
-                }
+                 final isDueOrOverdue = daysDiff <= 0;
+                 final isOverdue = daysDiff < 0;
+
+                 String dueLabel;
+                 Color dueColor;
+                 if (isOverdue) {
+                   dueLabel = 'Overdue by ${daysDiff.abs()} day(s)';
+                   dueColor = Colors.red;
+                 } else if (daysDiff == 0) {
+                   dueLabel = 'Due TODAY';
+                   dueColor = Colors.orange[800]!;
+                 } else if (sub.isDueSoon || (daysDiff >= 0 && daysDiff <= 3)) {
+                   dueLabel = 'Due in $daysDiff day(s)';
+                   dueColor = Colors.orange;
+                 } else {
+                   dueLabel = 'Due ${_formatDate(sub.nextDueDate)}';
+                   dueColor = Colors.grey[600]!;
+                 }
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),

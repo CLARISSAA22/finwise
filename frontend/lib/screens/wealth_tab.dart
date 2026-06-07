@@ -116,14 +116,23 @@ class _WealthTabState extends State<WealthTab> {
   Widget _buildSubscriptionCard(dynamic sub) {
     String dueText;
     Color? subtitleColor;
-    if (sub.dueInDays < 0) {
-      dueText = 'Overdue by ${sub.dueInDays.abs()} day(s)';
+    
+    int daysDiff = sub.dueInDays;
+    try {
+      final dueDate = DateTime.parse(sub.nextDueDate);
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      daysDiff = dueDate.difference(today).inDays;
+    } catch (_) {}
+
+    if (daysDiff < 0) {
+      dueText = 'Overdue by ${daysDiff.abs()} day(s)';
       subtitleColor = Colors.red;
-    } else if (sub.dueInDays == 0) {
+    } else if (daysDiff == 0) {
       dueText = 'Due TODAY';
       subtitleColor = Colors.orange[800];
     } else {
-      dueText = 'Due in ${sub.dueInDays} day(s)';
+      dueText = 'Due in $daysDiff day(s)';
     }
 
     return Card(
