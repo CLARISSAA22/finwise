@@ -13,11 +13,20 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<FinanceProvider>(context, listen: false).fetchTransactions();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final now = DateTime.now();
+      final monthYear = "${now.year}-${now.month.toString().padLeft(2, '0')}";
+      await Provider.of<FinanceProvider>(context, listen: false).fetchTransactions(monthYear: monthYear);
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     });
   }
 
@@ -25,6 +34,17 @@ class _HomeTabState extends State<HomeTab> {
   Widget build(BuildContext context) {
     final fp = Provider.of<FinanceProvider>(context);
     final transactions = fp.transactions;
+
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: CircularProgressIndicator(
+            color: AppColors.primary,
+          ),
+        ),
+      );
+    }
 
     double totalIncome = 0;
     double totalExpense = 0;

@@ -53,7 +53,7 @@ class _BudgetsScreenState extends State<BudgetsScreen>
   // add budget function 
   void _addBudget() async 
   {
-    if (_amountCtrl.text.isEmpty) 
+    if (_amountCtrl.text.trim().isEmpty) 
     {
       return;
     }
@@ -62,7 +62,7 @@ class _BudgetsScreenState extends State<BudgetsScreen>
     final monthYear = "${now.year}-${now.month.toString().padLeft(2, '0')}";
     final success = await financeProvider.addBudget({
       'category': _selectedCategory,
-      'limit_amount': double.parse(_amountCtrl.text),
+      'limit_amount': double.parse(_amountCtrl.text.trim()),
       'month_year': monthYear
     });
     if (success && mounted) 
@@ -71,36 +71,112 @@ class _BudgetsScreenState extends State<BudgetsScreen>
       Navigator.pop(context);
     }
   }
+
   // budget screen code setup
   void _showAddDialog()
   {
-    showDialog(context: context, builder: (_) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text('New Monthly Budget'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: 
-        [
-          DropdownButtonFormField<String>(
-            value: _selectedCategory,
-            decoration: const InputDecoration(labelText: 'Category'),
-            items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-            onChanged: (v) => setState(() => _selectedCategory = v!),
-          ),
-          const SizedBox(height: 12),
-          TextField(controller: _amountCtrl, decoration: 
-          const InputDecoration(labelText: 'Limit Amount (₹)'), keyboardType: TextInputType.number),
-        ],
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), 
-        child: const Text('Cancel')),
-        ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-          onPressed: _addBudget, 
-          child: const Text('Set Budget', style: TextStyle(color: Colors.white)),
-        ),
-      ],
-    ));
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setStateModal) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'New Monthly Budget',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _selectedCategory,
+                        decoration: const InputDecoration(labelText: 'Category'),
+                        items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                        onChanged: (v) => setStateModal(() => _selectedCategory = v!),
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: _amountCtrl,
+                        decoration: const InputDecoration(labelText: 'Limit Amount (₹)'),
+                        keyboardType: TextInputType.number,
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              _amountCtrl.clear();
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Cancel'),
+                          ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            onPressed: () {
+                              final text = _amountCtrl.text.trim();
+                              if (text.isEmpty) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Please enter a limit amount'),
+                                    backgroundColor: Colors.red,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                                return;
+                              }
+                              final amount = double.tryParse(text);
+                              if (amount == null || amount <= 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Please enter a valid positive amount'),
+                                    backgroundColor: Colors.red,
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                                return;
+                              }
+                              _addBudget();
+                            },
+                            child: const Text('Set Budget', style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override

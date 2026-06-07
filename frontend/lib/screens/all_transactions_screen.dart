@@ -21,6 +21,14 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen>
   String _selectedPayment = 'All';
   DateTimeRange? _selectedDateRange;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<FinanceProvider>(context, listen: false).fetchTransactions();
+    });
+  }
+
   String _formatDate(String raw)
   {
     return DateFormatter.format(raw);

@@ -265,7 +265,28 @@ def add_transaction(current_user):
 @app.route('/transactions', methods=['GET'])
 @token_required
 def get_transactions(current_user):
-    transactions = Transaction.query.filter_by(user_id=current_user.id).order_by(Transaction.date.desc()).all()
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    month_year = request.args.get('month_year')
+    
+    query = Transaction.query.filter_by(user_id=current_user.id)
+    
+    if start_date and end_date:
+        query = query.filter(Transaction.date >= start_date, Transaction.date <= end_date)
+    elif month_year:
+        import calendar
+        try:
+            yr, mo = map(int, month_year.split('-'))
+        except Exception:
+            today = datetime.utcnow()
+            yr, mo = today.year, today.month
+        last_day = calendar.monthrange(yr, mo)[1]
+        s_date = f"{yr:04d}-{mo:02d}-01 00:00"
+        e_date = f"{yr:04d}-{mo:02d}-{last_day:02d} 23:59:59"
+        query = query.filter(Transaction.date >= s_date, Transaction.date <= e_date)
+        
+    transactions = query.order_by(Transaction.date.desc()).all()
+
     output = []
     for tx in transactions:
         output.append({
@@ -360,11 +381,22 @@ def get_budgets(current_user):
     month_year = request.args.get('month_year', datetime.utcnow().strftime('%Y-%m'))
     budgets = Budget.query.filter_by(user_id=current_user.id, month_year=month_year).all()
     
+    import calendar
+    try:
+        yr, mo = map(int, month_year.split('-'))
+    except Exception:
+        today = datetime.utcnow()
+        yr, mo = today.year, today.month
+    last_day = calendar.monthrange(yr, mo)[1]
+    start_date = f"{yr:04d}-{mo:02d}-01 00:00"
+    end_date = f"{yr:04d}-{mo:02d}-{last_day:02d} 23:59:59"
+    
     # Fetch ALL expense transactions for this user for the month once
     all_txs = Transaction.query.filter(
         Transaction.user_id == current_user.id,
         Transaction.type == 'expense',
-        Transaction.date.like(f"{month_year}%")
+        Transaction.date >= start_date,
+        Transaction.date <= end_date
     ).all()
 
     output = []
@@ -516,24 +548,40 @@ def get_insights(current_user):
     last_month_dt = today.replace(day=1) - timedelta(days=1)
     last_month = last_month_dt.strftime('%Y-%m')
     
+    import calendar
+    # Current month start/end
+    curr_yr, curr_mo = today.year, today.month
+    curr_last_day = calendar.monthrange(curr_yr, curr_mo)[1]
+    curr_start = f"{curr_yr:04d}-{curr_mo:02d}-01 00:00"
+    curr_end = f"{curr_yr:04d}-{curr_mo:02d}-{curr_last_day:02d} 23:59:59"
+    
+    # Last month start/end
+    last_yr, last_mo = last_month_dt.year, last_month_dt.month
+    last_last_day = calendar.monthrange(last_yr, last_mo)[1]
+    last_start = f"{last_yr:04d}-{last_mo:02d}-01 00:00"
+    last_end = f"{last_yr:04d}-{last_mo:02d}-{last_last_day:02d} 23:59:59"
+    
     txs_current = Transaction.query.filter(
         Transaction.user_id == current_user.id,
         Transaction.type == 'expense',
-        Transaction.date.like(f"{current_month}%")
+        Transaction.date >= curr_start,
+        Transaction.date <= curr_end
     ).all()
     current_spent = sum([tx.amount for tx in txs_current])
     
     txs_last = Transaction.query.filter(
         Transaction.user_id == current_user.id,
         Transaction.type == 'expense',
-        Transaction.date.like(f"{last_month}%")
+        Transaction.date >= last_start,
+        Transaction.date <= last_end
     ).all()
     last_spent = sum([tx.amount for tx in txs_last])
     
     txs_income = Transaction.query.filter(
         Transaction.user_id == current_user.id,
         Transaction.type == 'income',
-        Transaction.date.like(f"{current_month}%")
+        Transaction.date >= curr_start,
+        Transaction.date <= curr_end
     ).all()
     current_income = sum([tx.amount for tx in txs_income])
     

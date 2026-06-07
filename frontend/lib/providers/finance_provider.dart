@@ -19,11 +19,11 @@ class FinanceProvider with ChangeNotifier
   List<Goal> get goals => _goals;
   Map<String, dynamic> get insights => _insights;
 
-  Future<void> fetchTransactions() async 
+  Future<void> fetchTransactions({String? monthYear}) async 
   {
     try 
     {
-      final response = await _apiService.getRequest('/transactions');
+      final response = await _apiService.getRequest(monthYear != null ? '/transactions?month_year=$monthYear' : '/transactions');
       if (response.statusCode == 200) 
       {
         final data = jsonDecode(response.body);

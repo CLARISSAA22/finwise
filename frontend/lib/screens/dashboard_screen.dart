@@ -34,6 +34,11 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   Widget build(BuildContext context) 
   {
+    final authProvider = Provider.of<AuthProvider>(context);
+    final user = authProvider.currentUser;
+    final userName = user?.name ?? 'FinWise User';
+    final userEmail = user?.email ?? 'user@finwise.com';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('FinWise', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.2)),
@@ -63,8 +68,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                 backgroundColor: Colors.white,
                 child: Icon(Icons.person, color: AppColors.primary, size: 40),
               ),
-              accountName: const Text('FinWise User', style: TextStyle(fontWeight: FontWeight.bold)),
-              accountEmail: const Text('user@finwise.com'),
+              accountName: Text(userName, style: const TextStyle(fontWeight: FontWeight.bold)),
+              accountEmail: Text(userEmail),
             ),// transcation //
             const Divider(),
             ListTile(

@@ -147,7 +147,18 @@ class _InsightsScreenState extends State<InsightsScreen> {
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
           maxY: (currentSpent > lastSpent ? currentSpent : lastSpent) * 1.2,
-          barTouchData: BarTouchData(enabled: true),
+          barTouchData: BarTouchData(
+            enabled: true,
+            touchTooltipData: BarTouchTooltipData(
+              tooltipBgColor: Colors.blueGrey,
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                return BarTooltipItem(
+                  '₹${rod.toY.toStringAsFixed(2)}',
+                  const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                );
+              },
+            ),
+          ),
           titlesData: FlTitlesData(
             show: true,
             bottomTitles: AxisTitles(

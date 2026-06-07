@@ -114,6 +114,18 @@ class _WealthTabState extends State<WealthTab> {
   }
 
   Widget _buildSubscriptionCard(dynamic sub) {
+    String dueText;
+    Color? subtitleColor;
+    if (sub.dueInDays < 0) {
+      dueText = 'Overdue by ${sub.dueInDays.abs()} day(s)';
+      subtitleColor = Colors.red;
+    } else if (sub.dueInDays == 0) {
+      dueText = 'Due TODAY';
+      subtitleColor = Colors.orange[800];
+    } else {
+      dueText = 'Due in ${sub.dueInDays} day(s)';
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
@@ -126,11 +138,17 @@ class _WealthTabState extends State<WealthTab> {
         ),
         child: ListTile(
           leading: CircleAvatar(
-            backgroundColor: sub.isDueSoon ? AppColors.accent.withOpacity(0.1) : AppColors.secondaryLight,
-            child: Icon(Icons.calendar_today, color: sub.isDueSoon ? AppColors.accent : AppColors.secondary, size: 20),
+            backgroundColor: (sub.isDueSoon || sub.dueInDays <= 0) ? AppColors.accent.withOpacity(0.1) : AppColors.secondaryLight,
+            child: Icon(Icons.calendar_today, color: (sub.isDueSoon || sub.dueInDays <= 0) ? AppColors.accent : AppColors.secondary, size: 20),
           ),
           title: Text(sub.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-          subtitle: Text('Due in ${sub.dueInDays} days'),
+          subtitle: Text(
+            dueText,
+            style: TextStyle(
+              color: subtitleColor,
+              fontWeight: (sub.dueInDays <= 0) ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
           trailing: Text('₹${sub.amount.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
         ),
       ),
