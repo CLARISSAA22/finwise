@@ -305,6 +305,7 @@ def get_transactions(current_user):
     return jsonify({'transactions': output}), 200
 
 @app.route('/transactions/all', methods=['GET'])
+@app.route('/api/transactions/all', methods=['GET'])
 @token_required
 def get_all_transactions(current_user):
     query = Transaction.query.filter_by(user_id=current_user.id)
@@ -323,6 +324,39 @@ def get_all_transactions(current_user):
             'upi_ref': tx.upi_ref
         })
     return jsonify({'transactions': output}), 200
+
+@app.route('/transactions/summary', methods=['GET'])
+@app.route('/api/transactions/summary', methods=['GET'])
+@token_required
+def get_transactions_summary(current_user):
+    today = datetime.utcnow()
+    yr, mo = today.year, today.month
+    import calendar
+    last_day = calendar.monthrange(yr, mo)[1]
+    s_date = f"{yr:04d}-{mo:02d}-01 00:00"
+    e_date = f"{yr:04d}-{mo:02d}-{last_day:02d} 23:59:59"
+    
+    # Calculate sum of income and expense directly from DB
+    from sqlalchemy import func
+    income_sum = db.session.query(func.sum(Transaction.amount)).filter(
+        Transaction.user_id == current_user.id,
+        Transaction.type == 'income',
+        Transaction.date >= s_date,
+        Transaction.date <= e_date
+    ).scalar() or 0.0
+    
+    expense_sum = db.session.query(func.sum(Transaction.amount)).filter(
+        Transaction.user_id == current_user.id,
+        Transaction.type == 'expense',
+        Transaction.date >= s_date,
+        Transaction.date <= e_date
+    ).scalar() or 0.0
+    
+    return jsonify({
+        'income': float(income_sum),
+        'expense': float(expense_sum),
+        'balance': float(income_sum - expense_sum)
+    }), 200
 
 @app.route('/transactions/<int:tx_id>', methods=['PUT', 'DELETE'])
 @token_required

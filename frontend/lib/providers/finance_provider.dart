@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/models.dart';
 import '../services/api_service.dart';
-import '../utils/constants.dart';
 //user for finance provider  and fechtch data from backend
 class FinanceProvider with ChangeNotifier 
 {
@@ -13,6 +12,10 @@ class FinanceProvider with ChangeNotifier
   List<Subscription> _subscriptions = [];
   List<Goal> _goals = [];
   Map<String, dynamic> _insights = {};
+  double _monthlyIncome = 0.0;
+  double _monthlyExpense = 0.0;
+  double _monthlyBalance = 0.0;
+
   //getters for finance provider 
   List<Transaction> get transactions => _transactions;
   List<Transaction> get allTransactions => _allTransactions;
@@ -20,6 +23,9 @@ class FinanceProvider with ChangeNotifier
   List<Subscription> get subscriptions => _subscriptions;
   List<Goal> get goals => _goals;
   Map<String, dynamic> get insights => _insights;
+  double get monthlyIncome => _monthlyIncome;
+  double get monthlyExpense => _monthlyExpense;
+  double get monthlyBalance => _monthlyBalance;
 
   Future<void> fetchTransactions({String? monthYear}) async 
   {
@@ -58,6 +64,26 @@ class FinanceProvider with ChangeNotifier
     }
   }
 
+  Future<void> fetchMonthlySummary() async 
+  {
+    try 
+    {
+      final response = await _apiService.getRequest('/transactions/summary');
+      if (response.statusCode == 200) 
+      {
+        final data = jsonDecode(response.body);
+        _monthlyIncome = (data['income'] as num).toDouble();
+        _monthlyExpense = (data['expense'] as num).toDouble();
+        _monthlyBalance = (data['balance'] as num).toDouble();
+        notifyListeners();
+      }
+    }
+     catch (e) 
+    {
+      debugPrint('fetchMonthlySummary error: $e');
+    }
+  }
+
   Future<String?> addTransaction(Map<String, dynamic> txData) async {
     try 
     {
@@ -66,6 +92,7 @@ class FinanceProvider with ChangeNotifier
       {
         await fetchTransactions();
         await fetchAllTimeTransactions();
+        await fetchMonthlySummary();
         return null; // null = success
       }
       final msg = 'Server error ${response.statusCode}: ${response.body}';
@@ -86,6 +113,7 @@ class FinanceProvider with ChangeNotifier
     {
       await fetchTransactions();
       await fetchAllTimeTransactions();
+      await fetchMonthlySummary();
       return true;
     }
     return false;
@@ -177,6 +205,7 @@ class FinanceProvider with ChangeNotifier
         await fetchSubscriptions();
         await fetchTransactions();
         await fetchAllTimeTransactions();
+        await fetchMonthlySummary();
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
       debugPrint('paySubscription failed: ${response.statusCode} ${response.body}');
@@ -215,6 +244,7 @@ class FinanceProvider with ChangeNotifier
       await fetchGoals();
       await fetchTransactions();
       await fetchAllTimeTransactions();
+      await fetchMonthlySummary();
       return true;
     }
     return false;
@@ -235,6 +265,7 @@ class FinanceProvider with ChangeNotifier
       await fetchGoals();
       await fetchTransactions();
       await fetchAllTimeTransactions();
+      await fetchMonthlySummary();
       return true;
     }
     return false;
@@ -259,6 +290,7 @@ class FinanceProvider with ChangeNotifier
       await fetchGoals();
       await fetchTransactions();
       await fetchAllTimeTransactions();
+      await fetchMonthlySummary();
       return true;
     }
     return false;

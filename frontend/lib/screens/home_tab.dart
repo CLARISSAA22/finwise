@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/finance_provider.dart';
 import '../utils/constants.dart';
-import '../models/models.dart';
 import 'all_transactions_screen.dart';
 
 class HomeTab extends StatefulWidget {
@@ -21,7 +20,11 @@ class _HomeTabState extends State<HomeTab> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final now = DateTime.now();
       final monthYear = "${now.year}-${now.month.toString().padLeft(2, '0')}";
-      await Provider.of<FinanceProvider>(context, listen: false).fetchTransactions(monthYear: monthYear);
+      final fp = Provider.of<FinanceProvider>(context, listen: false);
+      await Future.wait([
+        fp.fetchTransactions(monthYear: monthYear),
+        fp.fetchMonthlySummary(),
+      ]);
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -46,16 +49,9 @@ class _HomeTabState extends State<HomeTab> {
       );
     }
 
-    double totalIncome = 0;
-    double totalExpense = 0;
-
-    for (var tx in transactions) {
-      if (tx.type == 'income') {
-        totalIncome += tx.amount;
-      } else {
-        totalExpense += tx.amount;
-      }
-    }
+    final totalIncome = fp.monthlyIncome;
+    final totalExpense = fp.monthlyExpense;
+    final totalBalance = fp.monthlyBalance;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16.0),
@@ -79,7 +75,7 @@ class _HomeTabState extends State<HomeTab> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '₹${(totalIncome - totalExpense).toStringAsFixed(2)}',
+                  '₹${totalBalance.toStringAsFixed(2)}',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 32,

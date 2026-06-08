@@ -130,6 +130,48 @@ def test_flow():
     print(f"Health Score: {res.json.get('health_score')}")
     print(f"Saving Tip: {res.json.get('saving_tip')}")
 
+    print("\n--- Testing Transactions Summary and Global Endpoint ---")
+    from datetime import datetime
+    today_str = datetime.utcnow().strftime('%Y-%m-%d %H:%M')
+    
+    # Add income for current month
+    client.post('/transactions', headers=headers, json={
+        'amount': 5000.0,
+        'type': 'income',
+        'category': 'Salary',
+        'date': today_str
+    })
+    # Add expense for current month
+    client.post('/transactions', headers=headers, json={
+        'amount': 1500.0,
+        'type': 'expense',
+        'category': 'Food',
+        'date': today_str,
+        'description': 'Lunch',
+        'mood': 'Happy',
+        'payment_method': 'UPI'
+    })
+
+    # Test /transactions/summary
+    res = client.get('/transactions/summary', headers=headers)
+    print(f"Summary Status: {res.status_code} | Data: {res.json}")
+    assert res.status_code == 200
+    assert res.json['income'] == 5000.0
+    assert res.json['expense'] == 3000.0  # 1500.0 custom + 500.0 goal add + 1000.0 goal edit
+    assert res.json['balance'] == 2000.0
+
+    # Test /api/transactions/summary
+    res = client.get('/api/transactions/summary', headers=headers)
+    print(f"API Summary Status: {res.status_code} | Data: {res.json}")
+    assert res.status_code == 200
+
+    # Test /api/transactions/all
+    res = client.get('/api/transactions/all', headers=headers)
+    print(f"API All-Time Status: {res.status_code} | Count: {len(res.json.get('transactions', []))}")
+    assert res.status_code == 200
+    # Should include: 2 April transactions + 4 June transactions = 6 total
+    assert len(res.json.get('transactions', [])) == 6
+
     print("\nAll Criteria Successfully Tested!")
 
 if __name__ == '__main__':
