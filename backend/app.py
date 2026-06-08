@@ -304,6 +304,26 @@ def get_transactions(current_user):
         })
     return jsonify({'transactions': output}), 200
 
+@app.route('/transactions/all', methods=['GET'])
+@token_required
+def get_all_transactions(current_user):
+    query = Transaction.query.filter_by(user_id=current_user.id)
+    transactions = query.order_by(Transaction.date.desc()).all()
+    output = []
+    for tx in transactions:
+        output.append({
+            'id': tx.id,
+            'amount': tx.amount,
+            'type': tx.type,
+            'category': tx.category,
+            'date': tx.date,
+            'description': tx.description,
+            'mood': tx.mood,
+            'payment_method': tx.payment_method,
+            'upi_ref': tx.upi_ref
+        })
+    return jsonify({'transactions': output}), 200
+
 @app.route('/transactions/<int:tx_id>', methods=['PUT', 'DELETE'])
 @token_required
 def modify_transaction(current_user, tx_id):

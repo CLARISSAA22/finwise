@@ -8,12 +8,14 @@ class FinanceProvider with ChangeNotifier
 {
   final ApiService _apiService = ApiService();
   List<Transaction> _transactions = [];
+  List<Transaction> _allTransactions = [];
   List<Budget> _budgets = [];
   List<Subscription> _subscriptions = [];
   List<Goal> _goals = [];
   Map<String, dynamic> _insights = {};
   //getters for finance provider 
   List<Transaction> get transactions => _transactions;
+  List<Transaction> get allTransactions => _allTransactions;
   List<Budget> get budgets => _budgets;
   List<Subscription> get subscriptions => _subscriptions;
   List<Goal> get goals => _goals;
@@ -37,6 +39,25 @@ class FinanceProvider with ChangeNotifier
       debugPrint('fetchTransactions error: $e');
     }
   }
+
+  Future<void> fetchAllTimeTransactions() async 
+  {
+    try 
+    {
+      final response = await _apiService.getRequest('/transactions/all');
+      if (response.statusCode == 200) 
+      {
+        final data = jsonDecode(response.body);
+        _allTransactions = (data['transactions'] as List).map((t) => Transaction.fromJson(t)).toList();
+        notifyListeners();
+      }
+    }
+     catch (e) 
+    {
+      debugPrint('fetchAllTimeTransactions error: $e');
+    }
+  }
+
   Future<String?> addTransaction(Map<String, dynamic> txData) async {
     try 
     {
@@ -44,6 +65,7 @@ class FinanceProvider with ChangeNotifier
       if (response.statusCode == 201)
       {
         await fetchTransactions();
+        await fetchAllTimeTransactions();
         return null; // null = success
       }
       final msg = 'Server error ${response.statusCode}: ${response.body}';
@@ -63,6 +85,7 @@ class FinanceProvider with ChangeNotifier
     if (response.statusCode == 200) 
     {
       await fetchTransactions();
+      await fetchAllTimeTransactions();
       return true;
     }
     return false;
@@ -153,6 +176,7 @@ class FinanceProvider with ChangeNotifier
       {
         await fetchSubscriptions();
         await fetchTransactions();
+        await fetchAllTimeTransactions();
         return jsonDecode(response.body) as Map<String, dynamic>;
       }
       debugPrint('paySubscription failed: ${response.statusCode} ${response.body}');
@@ -190,6 +214,7 @@ class FinanceProvider with ChangeNotifier
     {
       await fetchGoals();
       await fetchTransactions();
+      await fetchAllTimeTransactions();
       return true;
     }
     return false;
@@ -209,6 +234,7 @@ class FinanceProvider with ChangeNotifier
     {
       await fetchGoals();
       await fetchTransactions();
+      await fetchAllTimeTransactions();
       return true;
     }
     return false;
@@ -232,6 +258,7 @@ class FinanceProvider with ChangeNotifier
     {
       await fetchGoals();
       await fetchTransactions();
+      await fetchAllTimeTransactions();
       return true;
     }
     return false;

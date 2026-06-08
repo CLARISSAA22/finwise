@@ -25,7 +25,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<FinanceProvider>(context, listen: false).fetchTransactions();
+      Provider.of<FinanceProvider>(context, listen: false).fetchAllTimeTransactions();
     });
   }
 
@@ -66,7 +66,7 @@ class _AllTransactionsScreenState extends State<AllTransactionsScreen>
   Widget build(BuildContext context)
   {
     final fp = Provider.of<FinanceProvider>(context);
-    final List<Transaction> transactions = fp.transactions;
+    final List<Transaction> transactions = fp.allTransactions;
 
     final categories = <String>{'All'}..addAll(transactions.map((t) => t.category));
     final payments = <String>{'All'}..addAll(transactions.map((t) => t.paymentMethod));
